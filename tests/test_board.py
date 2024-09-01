@@ -140,3 +140,11 @@ def test_turn_with_multiple_jumps(game_board):
     game_board.current_player = Player.BLACK
     game_board.make_move(Move((4, 2), (2, 0)))
     assert game_board.current_player == Player.BLACK
+
+
+def test_king_me():
+    arr = np.zeros((8, 8))
+    arr[6, 2] = 1
+    board = GameBoard(BoardState(arr))
+    board.make_move(Move((6, 2), (7, 1)))
+    assert board.board.board[7, 1] == 2
