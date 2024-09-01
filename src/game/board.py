@@ -51,8 +51,10 @@ class BoardState:
 
 
 class GameBoard:
-    def __init__(self):
-        self.board = BoardState()
+    def __init__(self, board: BoardState | None = None):
+        if board is None:
+            board = BoardState()
+        self.board = board
         self.current_player = Player.RED
 
     def get_board(self):
