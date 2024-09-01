@@ -79,12 +79,16 @@ class GameBoard:
             for col in range(8):
                 if np.sign(self.board[row, col]) == player:
                     moves.extend(self.get_moves(row, col, player))
-                    # jump_moves.extend(self.get_jump_moves(row, col, player))
+                    jump_moves.extend(self.get_jump_moves(row, col, player))
         return moves + jump_moves
 
     @staticmethod
     def max_row_for_player(player: Player):
         return 7 if player == Player.RED else 0
+
+    @staticmethod
+    def second_last_row_for_player(player: Player):
+        return 6 if player == Player.RED else 1
 
     def get_moves(self, row: int, col: int, player: Player):
         moves = []
@@ -99,4 +103,20 @@ class GameBoard:
                 moves.append(Move((row, col), (row - player, col - 1)))
             if col < 7 and row != self.max_row_for_player(-player) and self.board[row - player, col + 1] == 0:
                 moves.append(Move((row, col), (row - player, col + 1)))
+        return moves
+
+    def get_jump_moves(self, row: int, col: int, player: Player):
+        # TODO: multiple jumps
+        moves = []
+        if self.board[row, col] == 0:
+            return moves
+        if col > 1 and row not in (self.max_row_for_player(player), self.second_last_row_for_player(player)) and np.sign(self.board[row + player, col - 1]) == -player and self.board[row + 2 * player, col - 2] == 0:
+            moves.append(Move((row, col), (row + 2 * player, col - 2)))
+        if col < 6 and row not in (self.max_row_for_player(player), self.second_last_row_for_player(player)) and np.sign(self.board[row + player, col + 1]) == -player and self.board[row + 2 * player, col + 2] == 0:
+            moves.append(Move((row, col), (row + 2 * player, col + 2)))
+        if np.abs(self.board[row, col]) == 2:
+            if col > 1 and row not in (self.max_row_for_player(-player), self.second_last_row_for_player(-player)) and np.sign(self.board[row - player, col - 1]) == -player and self.board[row - 2 * player, col - 2] == 0:
+                moves.append(Move((row, col), (row - 2 * player, col - 2)))
+            if col < 6 and row not in (self.max_row_for_player(-player), self.second_last_row_for_player(-player)) and np.sign(self.board[row - player, col + 1]) == -player and self.board[row - 2 * player, col + 2] == 0:
+                moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves

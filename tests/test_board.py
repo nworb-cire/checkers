@@ -57,3 +57,26 @@ def test_moves_at_extremities(row: int, col: int, player: Player, king: bool, ex
     board = GameBoard(BoardState(arr))
     moves = board.get_moves(row, col, player)
     assert moves == expected
+
+
+def test_jump():
+    arr = np.zeros((8, 8))
+    arr[0, 0] = 1
+    arr[1, 1] = -1
+    board = GameBoard(BoardState(arr))
+    moves = board.get_jump_moves(0, 0, Player.RED)
+    assert moves == [Move((0, 0), (2, 2))]
+    moves = board.get_jump_moves(1, 1, Player.BLACK)
+    assert moves == []
+
+
+def test_jump_blocked():
+    arr = np.zeros((8, 8))
+    arr[0, 0] = 1
+    arr[1, 1] = -1
+    arr[2, 2] = 1
+    board = GameBoard(BoardState(arr))
+    moves = board.get_jump_moves(0, 0, Player.RED)
+    assert moves == []
+    moves = board.get_jump_moves(1, 1, Player.BLACK)
+    assert moves == []
