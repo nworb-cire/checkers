@@ -90,13 +90,13 @@ class GameBoard:
         moves = []
         if self.board[row, col] == 0:
             return moves
-        if col > 0 and row != self.max_row_for_player(player) and self.board[row - player, col - 1] == 0:
-            moves.append(Move((row, col), (row - player, col - 1)))
-        if col < 7 and row != self.max_row_for_player(player) and self.board[row - player, col + 1] == 0:
-            moves.append(Move((row, col), (row - player, col + 1)))
+        if col > 0 and row != self.max_row_for_player(player) and self.board[row + player, col - 1] == 0:
+            moves.append(Move((row, col), (row + player, col - 1)))
+        if col < 7 and row != self.max_row_for_player(player) and self.board[row + player, col + 1] == 0:
+            moves.append(Move((row, col), (row + player, col + 1)))
         if np.abs(self.board[row, col]) == 2:
-            if col > 0 and row != self.max_row_for_player(-player) and self.board[row + player, col - 1] == 0:
-                moves.append(Move((row, col), (row + player, col - 1)))
-            if col < 7 and row != self.max_row_for_player(-player) and self.board[row + player, col + 1] == 0:
-                moves.append(Move((row, col), (row + player, col + 1)))
+            if col > 0 and row != self.max_row_for_player(-player) and self.board[row - player, col - 1] == 0:
+                moves.append(Move((row, col), (row - player, col - 1)))
+            if col < 7 and row != self.max_row_for_player(-player) and self.board[row - player, col + 1] == 0:
+                moves.append(Move((row, col), (row - player, col + 1)))
         return moves
