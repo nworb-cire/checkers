@@ -22,6 +22,12 @@ class Move:
     def __str__(self):
         return f"Move from {self.start} to {self.end}"
 
+    def __eq__(self, other):
+        return self.start == other.start and self.end == other.end
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.start} -> {self.end})"
+
 
 class BoardState:
     board: np.ndarray
