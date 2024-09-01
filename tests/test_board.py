@@ -80,3 +80,63 @@ def test_jump_blocked():
     assert moves == []
     moves = board.get_jump_moves(1, 1, Player.BLACK)
     assert moves == []
+
+
+def test_first_turn(game_board):
+    assert game_board.current_player == Player.RED
+    game_board.make_move(Move((2, 0), (3, 1)))
+    assert game_board.current_player == Player.BLACK
+    expected = np.array([
+        [1, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 1, 0, 1, 0, 1],
+        [0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, -1, 0, -1, 0, -1, 0, -1],
+        [-1, 0, -1, 0, -1, 0, -1, 0],
+        [0, -1, 0, -1, 0, -1, 0, -1]
+    ])
+    assert np.allclose(game_board.board.board, expected)
+
+
+def test_turn_with_jump(game_board):
+    game_board.board = BoardState(np.array([
+        [1, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 1, 0, 1, 0, 1],
+        [0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        [0, 0, -1, 0, 0, 0, 0, 0],
+        [0, 0, 0, -1, 0, -1, 0, -1],
+        [-1, 0, -1, 0, -1, 0, -1, 0],
+        [0, -1, 0, -1, 0, -1, 0, -1]
+    ]))
+    game_board.current_player = Player.BLACK
+    game_board.make_move(Move((4, 2), (2, 0)))
+    assert game_board.current_player == Player.RED
+    expected = np.array([
+        [1, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 1, 0, 1, 0, 1],
+        [-1, 0, 1, 0, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, -1, 0, -1, 0, -1],
+        [-1, 0, -1, 0, -1, 0, -1, 0],
+        [0, -1, 0, -1, 0, -1, 0, -1]
+    ])
+    assert np.allclose(game_board.board.board, expected)
+
+
+def test_turn_with_multiple_jumps(game_board):
+    game_board.board = BoardState(np.array([
+        [1, 0, 0, 0, 1, 0, 1, 0],
+        [0, 1, 0, 1, 0, 1, 0, 1],
+        [0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        [0, 0, -1, 0, 0, 0, 0, 0],
+        [0, 0, 0, -1, 0, -1, 0, -1],
+        [-1, 0, -1, 0, -1, 0, -1, 0],
+        [0, -1, 0, -1, 0, -1, 0, -1]
+    ]))
+    game_board.current_player = Player.BLACK
+    game_board.make_move(Move((4, 2), (2, 0)))
+    assert game_board.current_player == Player.BLACK

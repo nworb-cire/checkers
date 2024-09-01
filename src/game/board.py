@@ -41,6 +41,12 @@ class BoardState:
     def __getitem__(self, key):
         return self.board[key]
 
+    def __setitem__(self, key, value):
+        assert value in (-2, -1, 0, 1, 2)
+        assert 0 <= key[0] < 8
+        assert 0 <= key[1] < 8
+        self.board[key] = value
+
     @staticmethod
     def setup_board():
         board = np.array([
@@ -66,13 +72,10 @@ class GameBoard:
     def get_board(self):
         return self.board
 
-    def get_current_player(self):
-        return self.current_player
-
     def switch_player(self):
         self.current_player = -self.current_player
 
-    def get_available_moves(self, player: Player):
+    def get_available_moves(self, player: Player) -> tuple[list[Move], list[Move]]:
         moves = []
         jump_moves = []
         for row in range(8):
@@ -80,7 +83,7 @@ class GameBoard:
                 if np.sign(self.board[row, col]) == player:
                     moves.extend(self.get_moves(row, col, player))
                     jump_moves.extend(self.get_jump_moves(row, col, player))
-        return moves + jump_moves
+        return moves, jump_moves
 
     @staticmethod
     def max_row_for_player(player: Player):
@@ -106,7 +109,6 @@ class GameBoard:
         return moves
 
     def get_jump_moves(self, row: int, col: int, player: Player):
-        # TODO: multiple jumps
         moves = []
         if self.board[row, col] == 0:
             return moves
@@ -120,3 +122,19 @@ class GameBoard:
             if col < 6 and row not in (self.max_row_for_player(-player), self.second_last_row_for_player(-player)) and np.sign(self.board[row - player, col + 1]) == -player and self.board[row - 2 * player, col + 2] == 0:
                 moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves
+
+    def make_move(self, move: Move):
+        moves, jump_moves = self.get_available_moves(self.current_player)
+        if move not in moves and move not in jump_moves:
+            raise ValueError("Invalid move")
+        self.board[move.end] = self.board[move.start]
+        self.board[move.start] = 0
+        if move in jump_moves:
+            self.board[(move.start[0] + move.end[0]) // 2, (move.start[1] + move.end[1]) // 2] = 0
+            jump_moves = self.get_jump_moves(move.end[0], move.end[1], self.current_player)
+            if jump_moves:
+                return
+        # king me
+        if move.end[0] == self.max_row_for_player(self.current_player) and np.abs(self.board[move.end]) == 1:
+            self.board[move.end] *= 2
+        self.switch_player()
