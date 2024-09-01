@@ -35,6 +35,19 @@ def test_only_even_squares(game_board):
     (7, 1, Player.RED, True, [Move((7, 1), (6, 0)), Move((7, 1), (6, 2))]),
     # top right corner, king
     (7, 7, Player.RED, True, [Move((7, 7), (6, 6))]),
+    # Black player
+    # top left corner
+    (7, 1, Player.BLACK, False, [Move((7, 1), (6, 0)), Move((7, 1), (6, 2))]),
+    # top right corner
+    (7, 7, Player.BLACK, False, [Move((7, 7), (6, 6))]),
+    # bottom left corner
+    (0, 0, Player.BLACK, False, []),
+    # bottom right corner
+    (0, 6, Player.BLACK, False, []),
+    # bottom left corner, king
+    (0, 0, Player.BLACK, True, [Move((0, 0), (1, 1))]),
+    # bottom right corner, king
+    (0, 6, Player.BLACK, True, [Move((0, 6), (1, 5)), Move((0, 6), (1, 7))]),
 ])
 def test_moves_at_extremities(row: int, col: int, player: Player, king: bool, expected: list):
     arr = np.zeros((8, 8))
