@@ -1,5 +1,3 @@
-import contextlib
-
 import numpy as np
 
 from src.game.board import GameBoard, Player, Move
@@ -8,7 +6,8 @@ from src.game.board import GameBoard, Player, Move
 class Game:
     def __init__(self):
         self.game_board = GameBoard()
-        self.selected_square = None
+        self.from_square = None
+        self.to_square = None
 
     def current_player(self):
         return self.game_board.current_player
@@ -38,13 +37,18 @@ class Game:
             self.game_board.switch_player()
 
     def on_square_click(self, x, y):
-        if (
-            self.selected_square is None
-            and np.sign(self.game_board.board[x, y]) == self.current_player()
-        ):
-            self.selected_square = (x, y)
-        elif self.selected_square is not None:
-            self.take_turn(Move(self.selected_square, (x, y)))
-            self.selected_square = None
+        if self.from_square is None:
+            self.from_square = (x, y)
         else:
-            self.selected_square = None
+            self.to_square = (x, y)
+
+    def human_turn(self):
+        if self.from_square is not None and self.to_square is not None:
+            move = Move(self.from_square, self.to_square)
+            self.take_turn(move)
+            self.from_square = None
+            self.to_square = None
+
+    def tick(self):
+        self.human_turn()
+

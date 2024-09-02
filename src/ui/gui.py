@@ -61,7 +61,7 @@ class GUI:
                     # highlight the square the mouse is hovering over
                     if (
                         i * 100 <= x <= i * 100 + 100 and j * 100 <= y <= j * 100 + 100
-                    ) or (self.game.selected_square == (i, j)):
+                    ) or (self.game.from_square == (i, j)):
                         pygame.draw.rect(
                             self.WIN, (255, 255, 0), (i * 100, j * 100, 100, 100)
                         )
@@ -103,6 +103,9 @@ class GUI:
         self.game.on_square_click(x // 100, y // 100)
         self.game_over = self.game.is_game_over()
 
+    def tick(self):
+        self.game.tick()
+
 
 if __name__ == "__main__":
     pygame.init()
@@ -117,4 +120,5 @@ if __name__ == "__main__":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
                 gui.handle_click(x, y)
+        gui.tick()
     pygame.quit()
