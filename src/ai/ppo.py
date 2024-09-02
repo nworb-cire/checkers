@@ -5,7 +5,8 @@ from torch.distributions import Categorical
 
 from src.ai.actions import MOVES
 from src.ai.policy import PolicyNetwork
-from src.game.board import GameBoard, Player
+from src.game.board import GameBoard
+from src.game.player import Player
 
 
 class PPOAgent:

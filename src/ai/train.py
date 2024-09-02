@@ -3,7 +3,8 @@ from tqdm import trange
 from src.ai.actions import ACTIONS
 from src.ai.ppo import PPOAgent, Memory
 from src.ai.self_play import CheckersEnv
-from src.game.board import Player, BoardState
+from src.game.board import BoardState
+from src.game.player import Player
 
 
 def train_ppo(

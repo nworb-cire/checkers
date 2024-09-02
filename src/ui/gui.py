@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 
-from src.game.board import Player
+from src.game.player import Player
 from src.game.game import AIGame
 
 
@@ -39,10 +39,14 @@ class GUI:
             self.draw_board()
         else:
             self.WIN.fill((0, 0, 0))
+            winner = self.game.winner
             font = pygame.font.Font(None, 36)
-            text = font.render(
-                f"Game over! {self.game.get_winner()} wins!", True, (255, 255, 255)
-            )
+            if winner is None:
+                text = font.render("Stalemate!", True, (255, 255, 255))
+            else:
+                text = font.render(
+                    f"Game over! {self.game.winner} wins!", True, (255, 255, 255)
+                )
             text_rect = text.get_rect(center=(400, 400))
             self.WIN.blit(text, text_rect)
             text = font.render(

@@ -1,16 +1,10 @@
-import enum
-
 import numpy as np
 
 from src.ai.actions import MOVES
-from src.game.errors import InvalidMoveError
+from src.game.errors import InvalidMoveError, Stalemate, UnableToMoveError
 from src.game.moves import Move
+from src.game.player import Player
 from src.game.scores import Score
-
-
-class Player(enum.IntEnum):
-    RED = 1
-    BLACK = -1
 
 
 class BoardState:
@@ -66,8 +60,8 @@ class BoardState:
                 if np.sign(self.board[row, col]) == player:
                     moves.extend(self.get_moves(row, col, player))
                     jump_moves.extend(self.get_jump_moves(row, col, player))
-        # if jump_moves:
-        #     moves = []
+        if jump_moves:
+            moves = []
         return moves, jump_moves
 
     @staticmethod
@@ -160,22 +154,19 @@ class BoardState:
                 moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves
 
+    def is_able_to_move(self, player: Player):
+        moves, jump_moves = self.get_available_moves(player)
+        return len(moves) + len(jump_moves) > 0
+
     def is_stalemate(self):
-        red_moves, red_jumps = self.get_available_moves(Player.RED)
-        black_moves, black_jumps = self.get_available_moves(Player.BLACK)
-        return (
-            len(red_moves) + len(red_jumps) == 0
-            and len(black_moves) + len(black_jumps) == 0
+        return not self.is_able_to_move(Player.RED) and not self.is_able_to_move(
+            Player.BLACK
         )
 
     def is_game_over(self):
-        red_moves, red_jumps = self.get_available_moves(Player.RED)
-        black_moves, black_jumps = self.get_available_moves(Player.BLACK)
-        if len(red_moves) + len(red_jumps) == 0:
-            return Player.BLACK
-        elif len(black_moves) + len(black_jumps) == 0:
-            return Player.RED
-        return False
+        return not self.is_able_to_move(Player.RED) or not self.is_able_to_move(
+            Player.BLACK
+        )
 
     @staticmethod
     def setup_board():
@@ -253,12 +244,10 @@ class GameBoard:
 
         # end game if other player has no moves
         if self.board.is_stalemate():
-            self.game_over = True
-            return False
+            raise Stalemate()
 
-        if self.board.is_game_over():
+        if not self.board.is_able_to_move(-self.current_player):
             self.scores[self.current_player] += Score.WIN
-            self.game_over = True
-            return False
+            raise UnableToMoveError(winner=self.current_player)
 
         return True

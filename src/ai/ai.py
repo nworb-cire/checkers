@@ -3,7 +3,9 @@ from torch.distributions import Categorical
 
 from src.ai.actions import MOVES
 from src.ai.policy import PolicyNetwork
-from src.game.board import GameBoard, Player
+from src.game.board import GameBoard
+from src.game.errors import UnableToMoveError
+from src.game.player import Player
 
 
 class CheckersAI:
@@ -25,6 +27,8 @@ class CheckersAI:
             board = board.flip()
         state = torch.tensor(board.board, dtype=torch.float32).flatten()
         mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
+        if not mask.any():
+            raise UnableToMoveError(winner=-self.player)
         action_probs, _ = self.policy(state, mask)
         dist = Categorical(action_probs)
         action = dist.sample()

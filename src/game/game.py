@@ -4,8 +4,9 @@ import time
 import numpy as np
 
 from src.ai.ai import CheckersAI
-from src.game.board import GameBoard, Player
-from src.game.errors import InvalidMoveError
+from src.game.board import GameBoard
+from src.game.player import Player
+from src.game.errors import InvalidMoveError, GameOver
 from src.game.moves import Move
 
 
@@ -14,17 +15,13 @@ class Game:
         self.game_board = GameBoard()
         self.from_square = None
         self.to_square = None
+        self.winner = None
 
     def current_player(self):
         return self.game_board.current_player
 
     def is_game_over(self):
         return self.game_board.game_over
-
-    def get_winner(self):
-        if self.is_game_over():
-            return self.current_player_str()
-        return None
 
     def current_player_str(self):
         return "red" if self.current_player() == Player.RED else "black"
@@ -38,10 +35,13 @@ class Game:
         )
 
     def take_turn(self, move: Move):
-        with contextlib.suppress(InvalidMoveError):
+        try:
             switch_turns = self.game_board.make_move(move)
             if switch_turns:
                 self.game_board.switch_player()
+        except GameOver as e:
+            self.winner = e.winner
+            raise e
 
     def on_square_click(self, x, y):
         if self.from_square is None:
@@ -52,7 +52,8 @@ class Game:
     def human_turn(self):
         if self.from_square is not None and self.to_square is not None:
             move = Move(self.from_square, self.to_square)
-            self.take_turn(move)
+            with contextlib.suppress(InvalidMoveError):
+                self.take_turn(move)
             self.from_square = None
             self.to_square = None
 
@@ -63,9 +64,9 @@ class Game:
 class AIGame(Game):
     def __init__(self, ai: CheckersAI | None = None):
         super().__init__()
-        self.human_player = Player.BLACK
+        self.human_player = Player.RED
         if ai is None:
-            ai = CheckersAI.init(Player.RED, "models/ppo.pt")
+            ai = CheckersAI.init(-self.human_player, "models/ppo.pt")
         self.ai = ai
 
     def ai_turn(self):

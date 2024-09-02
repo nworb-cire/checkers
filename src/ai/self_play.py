@@ -4,9 +4,9 @@ import gymnasium as gym
 from gymnasium import spaces, register
 from gymnasium.core import ActType, ObsType
 
-from src.ai.actions import action_to_move
 from src.ai.ai import CheckersAI
-from src.game.board import GameBoard, Player
+from src.game.board import GameBoard
+from src.game.player import Player
 
 
 class CheckersEnv(gym.Env):
