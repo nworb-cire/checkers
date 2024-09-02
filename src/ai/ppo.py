@@ -29,23 +29,30 @@ class PPOAgent:
 
     @torch.no_grad()
     def select_action(self, game_board: GameBoard):
-        is_p2 = game_board.current_player == Player.BLACK
-        board = game_board.board
-        if is_p2:
-            # Model expects to be playing as player 1 (red).
-            # If the AI is playing as player 2 (black), the board needs to be flipped.
-            board = board.flip()
-        state = torch.tensor(board.board, dtype=torch.float32).flatten()
+        if game_board.current_player == Player.RED:
+            return self.select_action_red(game_board)
+        return self.select_action_black(game_board)
+
+    def select_action_red(self, game_board: GameBoard):
+        state = torch.tensor(game_board.board.board, dtype=torch.float32).flatten()
         mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
-        if is_p2:
-            action_probs, _ = self.policy_black(state, mask)
-        else:
-            action_probs, _ = self.policy_red(state, mask)
+        action_probs, _ = self.policy_red(state, mask)
         dist = Categorical(action_probs)
         action = dist.sample()
         move = MOVES[action.item()]
-        if is_p2:
-            move = move.flip()
+        return move, dist.log_prob(action).item()
+
+    def select_action_black(self, game_board: GameBoard):
+        # Model expects to be playing as player 1 (red).
+        # If the AI is playing as player 2 (black), the board needs to be flipped.
+        state = torch.tensor(
+            game_board.board.flip().board, dtype=torch.float32
+        ).flatten()
+        mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
+        action_probs, _ = self.policy_black(state, mask)
+        dist = Categorical(action_probs)
+        action = dist.sample()
+        move = MOVES[action.item()].flip()
         return move, dist.log_prob(action).item()
 
     def update(self, memory):
