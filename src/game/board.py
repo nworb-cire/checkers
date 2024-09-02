@@ -39,35 +39,6 @@ class BoardState:
     def __eq__(self, other):
         return np.allclose(self.board, other.board)
 
-    @staticmethod
-    def setup_board():
-        board = np.array(
-            [
-                [1, 0, 1, 0, 1, 0, 1, 0],
-                [0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, -1, 0, -1, 0, -1, 0, -1],
-                [-1, 0, -1, 0, -1, 0, -1, 0],
-                [0, -1, 0, -1, 0, -1, 0, -1],
-            ]
-        )
-        return board
-
-
-class GameBoard:
-    def __init__(self, board: BoardState | None = None):
-        if board is None:
-            board = BoardState()
-        self.board = board
-        self.current_player = Player.RED
-        self.game_over = False
-        self.scores = {Player.RED: 0, Player.BLACK: 0}
-
-    def switch_player(self):
-        self.current_player = -self.current_player
-
     def get_available_moves(self, player: Player) -> tuple[list[Move], list[Move]]:
         moves = []
         jump_moves = []
@@ -168,10 +139,55 @@ class GameBoard:
                 moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves
 
+    def is_stalemate(self):
+        red_moves, red_jumps = self.get_available_moves(Player.RED)
+        black_moves, black_jumps = self.get_available_moves(Player.BLACK)
+        return (
+            len(red_moves) + len(red_jumps) == 0
+            and len(black_moves) + len(black_jumps) == 0
+        )
+
+    def is_game_over(self):
+        red_moves, red_jumps = self.get_available_moves(Player.RED)
+        black_moves, black_jumps = self.get_available_moves(Player.BLACK)
+        return (
+            len(red_moves) + len(red_jumps) == 0
+            or len(black_moves) + len(black_jumps) == 0
+        )
+
+    @staticmethod
+    def setup_board():
+        board = np.array(
+            [
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, -1, 0, -1, 0, -1, 0, -1],
+                [-1, 0, -1, 0, -1, 0, -1, 0],
+                [0, -1, 0, -1, 0, -1, 0, -1],
+            ]
+        )
+        return board
+
+
+class GameBoard:
+    def __init__(self, board: BoardState | None = None):
+        if board is None:
+            board = BoardState()
+        self.board = board
+        self.current_player = Player.RED
+        self.game_over = False
+        self.scores = {Player.RED: 0, Player.BLACK: 0}
+
+    def switch_player(self):
+        self.current_player = -self.current_player
+
     def get_moves_mask(self, player: Player | None = None):
         if player is None:
             player = self.current_player
-        moves, jump_moves = self.get_available_moves(player)
+        moves, jump_moves = self.board.get_available_moves(player)
         mask = [move in moves + jump_moves for move in MOVES.values()]
         return mask
 
@@ -182,7 +198,7 @@ class GameBoard:
         :param move:
         :return: True if the turn is complete, False otherwise
         """
-        moves, jump_moves = self.get_available_moves(self.current_player)
+        moves, jump_moves = self.board.get_available_moves(self.current_player)
         if move not in moves and move not in jump_moves:
             return False
         self.board[move.end] = self.board[move.start]
@@ -197,22 +213,25 @@ class GameBoard:
             else:
                 self.scores[self.current_player] += Score.REGULAR_CAPTURE
             self.board[jumped_space] = 0
-            jump_moves = self.get_jump_moves(
+            jump_moves = self.board.get_jump_moves(
                 move.end[0], move.end[1], self.current_player
             )
             if jump_moves:
                 return False
         # king me
         if (
-            move.end[0] == self.max_row_for_player(self.current_player)
+            move.end[0] == self.board.max_row_for_player(self.current_player)
             and np.abs(self.board[move.end]) == 1
         ):
             self.board[move.end] *= 2
             self.scores[self.current_player] += Score.KING
 
         # end game if other player has no moves
-        other, other_jump = self.get_available_moves(-self.current_player)
-        if len(other) == 0 and len(other_jump) == 0:
+        if self.board.is_stalemate():
+            self.game_over = True
+            return False
+
+        if self.board.is_game_over():
             self.scores[self.current_player] += Score.WIN
             self.game_over = True
             return False

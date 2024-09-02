@@ -61,7 +61,7 @@ def test_moves_at_extremities(
     if king:
         arr[row, col] *= 2
     board = GameBoard(BoardState(arr))
-    moves = board.get_moves(row, col, player)
+    moves = board.board.get_moves(row, col, player)
     assert moves == expected
 
 
@@ -70,9 +70,9 @@ def test_jump():
     arr[0, 0] = 1
     arr[1, 1] = -1
     board = GameBoard(BoardState(arr))
-    moves = board.get_jump_moves(0, 0, Player.RED)
+    moves = board.board.get_jump_moves(0, 0, Player.RED)
     assert moves == [Move((0, 0), (2, 2))]
-    moves = board.get_jump_moves(1, 1, Player.BLACK)
+    moves = board.board.get_jump_moves(1, 1, Player.BLACK)
     assert moves == []
 
 
@@ -82,16 +82,16 @@ def test_jump_blocked():
     arr[1, 1] = -1
     arr[2, 2] = 1
     board = GameBoard(BoardState(arr))
-    moves = board.get_jump_moves(0, 0, Player.RED)
+    moves = board.board.get_jump_moves(0, 0, Player.RED)
     assert moves == []
-    moves = board.get_jump_moves(1, 1, Player.BLACK)
+    moves = board.board.get_jump_moves(1, 1, Player.BLACK)
     assert moves == []
 
 
 def test_first_turn(game_board):
     assert game_board.current_player == Player.RED
-    game_board.make_move(Move((2, 0), (3, 1)))
-    assert game_board.current_player == Player.BLACK
+    turn_over = game_board.make_move(Move((2, 0), (3, 1)))
+    assert turn_over
     expected = np.array(
         [
             [1, 0, 1, 0, 1, 0, 1, 0],
@@ -123,8 +123,8 @@ def test_turn_with_jump(game_board):
         )
     )
     game_board.current_player = Player.BLACK
-    game_board.make_move(Move((4, 2), (2, 0)))
-    assert game_board.current_player == Player.RED
+    turn_over = game_board.make_move(Move((4, 2), (2, 0)))
+    assert turn_over
     expected = np.array(
         [
             [1, 0, 1, 0, 1, 0, 1, 0],
