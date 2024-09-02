@@ -4,7 +4,7 @@ import pytest
 from src.game.board import GameBoard, Player, Move, BoardState
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def game_board():
     return GameBoard()
 
@@ -165,3 +165,21 @@ def test_king_me():
     board = GameBoard(BoardState(arr))
     board.make_move(Move((6, 2), (7, 1)))
     assert board.board.board[7, 1] == 2
+
+
+def test_flip_init(game_board):
+    assert game_board.board.flip() == game_board.board
+
+
+def test_flip_single():
+    arr = np.zeros((8, 8))
+    arr[0, 0] = 1
+    board = BoardState(arr)
+    flipped = board.flip()
+    assert flipped.board[7, 7] == -1
+
+
+def test_double_flip(game_board):
+    board = game_board.board
+    flipped = board.flip().flip()
+    assert flipped == board

@@ -46,6 +46,15 @@ class BoardState:
         assert 0 <= key[1] < 8
         self.board[key] = value
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self.board)})"
+
+    def flip(self):
+        return BoardState(-self.board[::-1, ::-1])
+
+    def __eq__(self, other):
+        return np.allclose(self.board, other.board)
+
     @staticmethod
     def setup_board():
         board = np.array(
