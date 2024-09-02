@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 
 from src.game.board import Player
-from src.game.game import Game
+from src.game.game import AIGame
 
 
 class GUI:
@@ -15,7 +15,7 @@ class GUI:
             self.WIDTH, self.HEIGHT = self.WIN.get_size()
         pygame.display.set_caption("Checkers")
 
-        self.game = Game()
+        self.game = AIGame()
         self.game_over = False
 
     def draw_piece(self, x, y, player: Player, king: bool):

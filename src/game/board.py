@@ -27,6 +27,11 @@ class Move:
     def __repr__(self):
         return f"{self.__class__.__name__}({self.start} -> {self.end})"
 
+    def flip(self):
+        return Move(
+            (7 - self.start[0], 7 - self.start[1]), (7 - self.end[0], 7 - self.end[1])
+        )
+
 
 class BoardState:
     board: np.ndarray

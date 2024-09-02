@@ -1,5 +1,8 @@
+import time
+
 import numpy as np
 
+from src.ai.agent import CheckersAI
 from src.game.board import GameBoard, Player, Move
 
 
@@ -52,3 +55,22 @@ class Game:
     def tick(self):
         self.human_turn()
 
+
+class AIGame(Game):
+    def __init__(self, ai: CheckersAI | None = None):
+        super().__init__()
+        self.human_player = Player.BLACK
+        if ai is None:
+            ai = CheckersAI.init(Player.RED)
+        self.ai = ai
+
+    def ai_turn(self):
+        time.sleep(0.5)
+        move, _ = self.ai.select_action(self.game_board)
+        super().take_turn(move)
+
+    def tick(self):
+        if self.current_player() == self.human_player:
+            self.human_turn()
+        else:
+            self.ai_turn()
