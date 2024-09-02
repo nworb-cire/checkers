@@ -14,3 +14,4 @@ def action_to_move(action) -> Move:
 
 
 MOVES = {action: action_to_move(action) for action in range(32 * 32)}
+ACTIONS = {move: action for action, move in MOVES.items()}

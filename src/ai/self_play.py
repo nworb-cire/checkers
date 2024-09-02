@@ -10,35 +10,16 @@ from src.game.board import GameBoard, Player
 
 
 class CheckersEnv(gym.Env):
-    MOVES = {action: action_to_move(action) for action in range(32 * 32)}
-
     def __init__(self):
         self.action_space = spaces.Discrete(32 * 32)  # (from, to)
         self.observation_space = spaces.Box(low=0, high=2, shape=(8, 8))
 
         self.game_board = GameBoard()
-        self.player = Player.BLACK
+        self.player = Player.RED
 
     def reset(self, seed=None, options=None):
         self.game_board = GameBoard()
         return self.game_board
-
-    def is_valid_action(self, action):
-        move = self.MOVES[action]
-        moves, jumps = self.game_board.get_available_moves(
-            self.game_board.current_player
-        )
-        return move in moves + jumps
-
-    def get_valid_action(self):
-        moves, jumps = self.game_board.get_available_moves(
-            self.game_board.current_player
-        )
-        while True:
-            action = self.action_space.sample()
-            move = self.MOVES[action]
-            if move in moves + jumps:
-                return action
 
     def step(
         self, action: ActType

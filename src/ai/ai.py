@@ -1,9 +1,9 @@
 import torch
 from torch import nn
+from torch.distributions import Categorical
 
 from src.ai.actions import MOVES
 from src.game.board import GameBoard, Player
-from src.game.moves import Move
 
 
 class CheckersAI:
@@ -17,24 +17,23 @@ class CheckersAI:
         self.policy_model = policy_model
         self.value_model = value_model
 
-    def select_action(self, game_board: GameBoard) -> tuple[Move, torch.Tensor]:
+    @torch.no_grad()
+    def select_action(self, game_board: GameBoard):
+        is_p2 = game_board.current_player == Player.BLACK
         board = game_board.board
-        if self.player == Player.BLACK:
+        if is_p2:
             # Model expects to be playing as player 1 (red).
             # If the AI is playing as player 2 (black), the board needs to be flipped.
             board = board.flip()
-        board = torch.tensor(board.board, dtype=torch.float32).flatten()
-
-        logits = self.policy_model(board)
-        moves, jumps = game_board.get_available_moves(Player.RED)
-        valid_actions = torch.tensor([move in moves + jumps for move in MOVES.values()])
-        logits[~valid_actions] = float("-inf")
-        probabilities = torch.softmax(logits, dim=-1)
-        move = torch.multinomial(probabilities, 1).item()
-        move = MOVES[move]
-        if self.player == Player.BLACK:
+        state = torch.tensor(board.board, dtype=torch.float32).flatten()
+        mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
+        action_probs, _ = self.policy_model(state, mask)
+        dist = Categorical(action_probs)
+        action = dist.sample()
+        move = MOVES[action.item()]
+        if is_p2:
             move = move.flip()
-        return move, probabilities
+        return move, dist.log_prob(action).item()
 
     @classmethod
     def init(cls, player: Player):

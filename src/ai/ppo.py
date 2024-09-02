@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Categorical
 
-from src.game.board import GameBoard
+from src.ai.actions import MOVES
+from src.game.board import GameBoard, Player
 
 
 class PPOAgent:
@@ -20,20 +21,32 @@ class PPOAgent:
         self.eps_clip = eps_clip
         self.K_epochs = K_epochs
 
-        self.policy = PolicyNetwork(state_dim, action_dim)
-        self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
-        self.policy_old = PolicyNetwork(state_dim, action_dim)
-        self.policy_old.load_state_dict(self.policy.state_dict())
+        self.policy_red = PolicyNetwork(state_dim, action_dim)
+        self.optimizer = optim.Adam(self.policy_red.parameters(), lr=lr)
+        self.policy_black = PolicyNetwork(state_dim, action_dim)
+        self.policy_black.load_state_dict(self.policy_red.state_dict())
         self.MseLoss = nn.MSELoss()
 
     @torch.no_grad()
     def select_action(self, game_board: GameBoard):
-        state = torch.tensor(game_board.board.board, dtype=torch.float32).flatten()
+        is_p2 = game_board.current_player == Player.BLACK
+        board = game_board.board
+        if is_p2:
+            # Model expects to be playing as player 1 (red).
+            # If the AI is playing as player 2 (black), the board needs to be flipped.
+            board = board.flip()
+        state = torch.tensor(board.board, dtype=torch.float32).flatten()
         mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
-        action_probs, _ = self.policy_old(state, mask)
+        if is_p2:
+            action_probs, _ = self.policy_black(state, mask)
+        else:
+            action_probs, _ = self.policy_red(state, mask)
         dist = Categorical(action_probs)
         action = dist.sample()
-        return action.item(), dist.log_prob(action).item()
+        move = MOVES[action.item()]
+        if is_p2:
+            move = move.flip()
+        return move, dist.log_prob(action).item()
 
     def update(self, memory):
         rewards = []
@@ -52,7 +65,7 @@ class PPOAgent:
         old_logprobs = torch.tensor(memory.logprobs, dtype=torch.float32)
 
         for _ in range(self.K_epochs):
-            logprobs, state_values, dist_entropy = self.policy.evaluate(
+            logprobs, state_values, dist_entropy = self.policy_red.evaluate(
                 old_states, old_actions
             )
             ratios = torch.exp(logprobs - old_logprobs.detach())
@@ -71,7 +84,7 @@ class PPOAgent:
             loss.mean().backward()
             self.optimizer.step()
 
-        self.policy_old.load_state_dict(self.policy.state_dict())
+        self.policy_black.load_state_dict(self.policy_red.state_dict())
 
 
 class PolicyNetwork(nn.Module):

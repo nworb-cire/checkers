@@ -1,6 +1,9 @@
-from src.ai.actions import MOVES
+from tqdm import trange
+
+from src.ai.actions import MOVES, ACTIONS
 from src.ai.ppo import PPOAgent, Memory
 from src.ai.self_play import CheckersEnv
+from src.game.board import Player
 
 
 def train_ppo(
@@ -8,25 +11,27 @@ def train_ppo(
     agent,
     memory,
     max_episodes=1000,
-    max_timesteps=3000,
-    update_timestep=2000,
+    max_timesteps=50,
+    update_timestep=10,
 ):
     timestep = 0
-    for episode in range(max_episodes):
-        state = env.reset()
+    for _ in trange(max_episodes, desc="Games"):
+        game_board = env.reset()
         for t in range(max_timesteps):
             timestep += 1
-            action, logprob = agent.select_action(state)
-            move = MOVES[action]
+            while game_board.current_player == Player.BLACK:
+                move, logprob = agent.select_action(game_board)
+                next_state, reward, done, _, _ = env.step(move)
+            move, logprob = agent.select_action(game_board)
             next_state, reward, done, _, _ = env.step(move)
 
-            memory.states.append(state.board.board.flatten())
-            memory.actions.append(action)
+            memory.states.append(game_board.board.board.flatten())
+            memory.actions.append(ACTIONS[move])
             memory.logprobs.append(logprob)
             memory.rewards.append(reward)
             memory.is_terminals.append(done)
 
-            state = next_state
+            game_board = next_state
 
             if timestep % update_timestep == 0:
                 agent.update(memory)
@@ -35,8 +40,6 @@ def train_ppo(
 
             if done:
                 break
-
-        print(f"Episode {episode} completed")
 
 
 if __name__ == "__main__":

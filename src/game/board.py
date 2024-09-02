@@ -200,7 +200,7 @@ class GameBoard:
         """
         moves, jump_moves = self.board.get_available_moves(self.current_player)
         if move not in moves and move not in jump_moves:
-            return False
+            raise ValueError(f"Invalid move: {move}")
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = 0
         if move in jump_moves:

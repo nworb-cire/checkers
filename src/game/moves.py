@@ -19,3 +19,6 @@ class Move:
         return Move(
             (7 - self.start[0], 7 - self.start[1]), (7 - self.end[0], 7 - self.end[1])
         )
+
+    def __hash__(self):
+        return hash((self.start, self.end))
