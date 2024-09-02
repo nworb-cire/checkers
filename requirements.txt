@@ -1,4 +1,5 @@
 black
+gymnasium~=0.29.1
 numpy~=2.1.0
 pygame~=2.6.0
 pygbag
