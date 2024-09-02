@@ -36,6 +36,24 @@ class BoardState:
     def flip(self):
         return BoardState(-self.board[::-1, ::-1])
 
+    def visualize(self):
+        s = ""
+        for row in range(8):
+            for col in range(8):
+                match self.board[row, col]:
+                    case 0:
+                        s += " "
+                    case 1:
+                        s += "r"
+                    case -1:
+                        s += "b"
+                    case 2:
+                        s += "R"
+                    case -2:
+                        s += "B"
+            s += "\n"
+        return s
+
     def __eq__(self, other):
         return np.allclose(self.board, other.board)
 
@@ -47,6 +65,8 @@ class BoardState:
                 if np.sign(self.board[row, col]) == player:
                     moves.extend(self.get_moves(row, col, player))
                     jump_moves.extend(self.get_jump_moves(row, col, player))
+        # if jump_moves:
+        #     moves = []
         return moves, jump_moves
 
     @staticmethod
@@ -150,10 +170,11 @@ class BoardState:
     def is_game_over(self):
         red_moves, red_jumps = self.get_available_moves(Player.RED)
         black_moves, black_jumps = self.get_available_moves(Player.BLACK)
-        return (
-            len(red_moves) + len(red_jumps) == 0
-            or len(black_moves) + len(black_jumps) == 0
-        )
+        if len(red_moves) + len(red_jumps) == 0:
+            return Player.BLACK
+        elif len(black_moves) + len(black_jumps) == 0:
+            return Player.RED
+        return False
 
     @staticmethod
     def setup_board():
@@ -180,6 +201,7 @@ class GameBoard:
         self.current_player = Player.RED
         self.game_over = False
         self.scores = {Player.RED: 0, Player.BLACK: 0}
+        self.turn_number = 0
 
     def switch_player(self):
         self.current_player = -self.current_player
@@ -201,6 +223,8 @@ class GameBoard:
         moves, jump_moves = self.board.get_available_moves(self.current_player)
         if move not in moves and move not in jump_moves:
             raise ValueError(f"Invalid move: {move}")
+
+        self.turn_number += 1
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = 0
         if move in jump_moves:

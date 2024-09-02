@@ -93,6 +93,9 @@ class PPOAgent:
 
         self.policy_black.load_state_dict(self.policy_red.state_dict())
 
+    def save(self, path):
+        torch.save(self.policy_red.state_dict(), path)
+
 
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim: int = 8 * 8, action_dim: int = 32 * 32):

@@ -17,14 +17,16 @@ class CheckersEnv(gym.Env):
         self.game_board = GameBoard()
         self.player = Player.RED
 
-    def reset(self, seed=None, options=None):
+    def reset(self, seed=None, options=None) -> GameBoard:
         self.game_board = GameBoard()
         return self.game_board
 
     def step(
         self, action: ActType
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        self.game_board.make_move(action)
+        turn_over = self.game_board.make_move(action)
+        if turn_over:
+            self.game_board.switch_player()
 
         terminated = self.game_board.game_over
         reward = self.game_board.scores[self.player]
