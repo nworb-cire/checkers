@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
 
+from src.game.errors import GameOver
 from src.game.player import Player
 from src.game.game import Game, AIGame
 
@@ -116,13 +117,16 @@ class GUI:
         self.game_over = self.game.is_game_over()
 
     def tick(self):
-        self.game.tick()
+        try:
+            self.game.tick()
+        except GameOver:
+            self.game_over = True
 
 
 if __name__ == "__main__":
     pygame.init()
     game = AIGame()
-    gui = GUI(game=game, debug=True)
+    gui = GUI(game=game, debug=False)
 
     run = True
     while run:
