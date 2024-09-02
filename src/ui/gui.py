@@ -45,6 +45,11 @@ class GUI:
             )
             text_rect = text.get_rect(center=(400, 400))
             self.WIN.blit(text, text_rect)
+            text = font.render(
+                f"Final score: {self.game.score_str()}", True, (255, 255, 255)
+            )
+            text_rect = text.get_rect(center=(400, 450))
+            self.WIN.blit(text, text_rect)
             pygame.display.update()
 
     def draw_board(self):

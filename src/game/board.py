@@ -2,6 +2,8 @@ import enum
 
 import numpy as np
 
+from src.game.scores import Score
+
 
 class Player(enum.IntEnum):
     RED = 1
@@ -70,6 +72,8 @@ class GameBoard:
             board = BoardState()
         self.board = board
         self.current_player = Player.RED
+        self.game_over = False
+        self.scores = {Player.RED: 0, Player.BLACK: 0}
 
     def get_board(self):
         return self.board
@@ -184,9 +188,15 @@ class GameBoard:
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = 0
         if move in jump_moves:
-            self.board[
-                (move.start[0] + move.end[0]) // 2, (move.start[1] + move.end[1]) // 2
-            ] = 0
+            jumped_space = (move.start[0] + move.end[0]) // 2, (
+                move.start[1] + move.end[1]
+            ) // 2
+            jumped_king = np.abs(self.board[jumped_space]) == 2
+            if jumped_king:
+                self.scores[self.current_player] += Score.KING_CAPTURE
+            else:
+                self.scores[self.current_player] += Score.REGULAR_CAPTURE
+            self.board[jumped_space] = 0
             jump_moves = self.get_jump_moves(
                 move.end[0], move.end[1], self.current_player
             )
@@ -198,4 +208,13 @@ class GameBoard:
             and np.abs(self.board[move.end]) == 1
         ):
             self.board[move.end] *= 2
+            self.scores[self.current_player] += Score.KING
+
+        # end game if other player has no moves
+        other, other_jump = self.get_available_moves(-self.current_player)
+        if len(other) == 0 and len(other_jump) == 0:
+            self.scores[self.current_player] += Score.WIN
+            self.game_over = True
+            return
+
         self.switch_player()
