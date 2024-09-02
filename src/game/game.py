@@ -1,9 +1,11 @@
+import contextlib
 import time
 
 import numpy as np
 
 from src.ai.ai import CheckersAI
 from src.game.board import GameBoard, Player
+from src.game.errors import InvalidMoveError
 from src.game.moves import Move
 
 
@@ -36,9 +38,10 @@ class Game:
         )
 
     def take_turn(self, move: Move):
-        switch_turns = self.game_board.make_move(move)
-        if switch_turns:
-            self.game_board.switch_player()
+        with contextlib.suppress(InvalidMoveError):
+            switch_turns = self.game_board.make_move(move)
+            if switch_turns:
+                self.game_board.switch_player()
 
     def on_square_click(self, x, y):
         if self.from_square is None:

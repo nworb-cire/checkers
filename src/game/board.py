@@ -3,6 +3,7 @@ import enum
 import numpy as np
 
 from src.ai.actions import MOVES
+from src.game.errors import InvalidMoveError
 from src.game.moves import Move
 from src.game.scores import Score
 
@@ -222,7 +223,7 @@ class GameBoard:
         """
         moves, jump_moves = self.board.get_available_moves(self.current_player)
         if move not in moves and move not in jump_moves:
-            raise ValueError(f"Invalid move: {move}")
+            raise InvalidMoveError(move)
 
         self.turn_number += 1
         self.board[move.end] = self.board[move.start]
