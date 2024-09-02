@@ -32,6 +32,11 @@ class Game:
             self.game_board.board.board == 2 * player
         )
 
+    def take_turn(self, move: Move):
+        switch_turns = self.game_board.make_move(move)
+        if switch_turns:
+            self.game_board.switch_player()
+
     def on_square_click(self, x, y):
         if (
             self.selected_square is None
@@ -39,8 +44,7 @@ class Game:
         ):
             self.selected_square = (x, y)
         elif self.selected_square is not None:
-            with contextlib.suppress(ValueError):
-                self.game_board.make_move(Move(self.selected_square, (x, y)))
+            self.take_turn(Move(self.selected_square, (x, y)))
             self.selected_square = None
         else:
             self.selected_square = None

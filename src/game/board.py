@@ -184,10 +184,16 @@ class GameBoard:
                 moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves
 
-    def make_move(self, move: Move):
+    def make_move(self, move: Move) -> bool:
+        """
+        Make a move on the board. Returns True if the turn is complete and should switch players, False if the current
+        player has another move available (i.e. a jump move) or has won the game.
+        :param move:
+        :return: True if the turn is complete, False otherwise
+        """
         moves, jump_moves = self.get_available_moves(self.current_player)
         if move not in moves and move not in jump_moves:
-            raise ValueError("Invalid move")
+            return False
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = 0
         if move in jump_moves:
@@ -204,7 +210,7 @@ class GameBoard:
                 move.end[0], move.end[1], self.current_player
             )
             if jump_moves:
-                return
+                return False
         # king me
         if (
             move.end[0] == self.max_row_for_player(self.current_player)
@@ -218,6 +224,6 @@ class GameBoard:
         if len(other) == 0 and len(other_jump) == 0:
             self.scores[self.current_player] += Score.WIN
             self.game_over = True
-            return
+            return False
 
-        self.switch_player()
+        return True
