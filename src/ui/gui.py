@@ -6,9 +6,13 @@ from src.game.game import Game
 
 
 class GUI:
-    def __init__(self):
-        self.WIDTH, self.HEIGHT = 800, 900
-        self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+    def __init__(self, screen=None):
+        if screen is None:
+            self.WIDTH, self.HEIGHT = 800, 900
+            self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        else:
+            self.WIN = screen
+            self.WIDTH, self.HEIGHT = self.WIN.get_size()
         pygame.display.set_caption("Checkers")
 
         self.game = Game()
