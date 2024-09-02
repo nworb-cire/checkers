@@ -21,7 +21,7 @@ class CheckersEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         self.game_board = GameBoard()
-        return self.game_board.board
+        return self.game_board
 
     def is_valid_action(self, action):
         move = self.MOVES[action]

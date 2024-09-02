@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from src.game.board import GameBoard, Player, Move, BoardState
+from src.game.board import GameBoard, Player, BoardState
+from src.game.moves import Move
 
 
 @pytest.fixture(scope="function")

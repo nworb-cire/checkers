@@ -1,4 +1,4 @@
-from src.game.board import Move
+from src.game.moves import Move
 
 
 def action_to_move(action) -> Move:

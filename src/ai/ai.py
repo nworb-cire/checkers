@@ -2,7 +2,8 @@ import torch
 from torch import nn
 
 from src.ai.actions import MOVES
-from src.game.board import GameBoard, Player, Move
+from src.game.board import GameBoard, Player
+from src.game.moves import Move
 
 
 class CheckersAI:

@@ -2,35 +2,14 @@ import enum
 
 import numpy as np
 
+from src.ai.actions import MOVES
+from src.game.moves import Move
 from src.game.scores import Score
 
 
 class Player(enum.IntEnum):
     RED = 1
     BLACK = -1
-
-
-class Move:
-    def __init__(self, start: tuple[int, int], end: tuple[int, int]):
-        assert len(start) == 2
-        assert len(end) == 2
-        assert 0 <= start[0] < 8
-        assert 0 <= start[1] < 8
-        assert 0 <= end[0] < 8
-        assert 0 <= end[1] < 8
-        self.start = start
-        self.end = end
-
-    def __eq__(self, other):
-        return self.start == other.start and self.end == other.end
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.start} -> {self.end})"
-
-    def flip(self):
-        return Move(
-            (7 - self.start[0], 7 - self.start[1]), (7 - self.end[0], 7 - self.end[1])
-        )
 
 
 class BoardState:
@@ -188,6 +167,13 @@ class GameBoard:
             ):
                 moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves
+
+    def get_moves_mask(self, player: Player | None = None):
+        if player is None:
+            player = self.current_player
+        moves, jump_moves = self.get_available_moves(player)
+        mask = [move in moves + jump_moves for move in MOVES.values()]
+        return mask
 
     def make_move(self, move: Move) -> bool:
         """

@@ -3,7 +3,8 @@ import time
 import numpy as np
 
 from src.ai.ai import CheckersAI
-from src.game.board import GameBoard, Player, Move
+from src.game.board import GameBoard, Player
+from src.game.moves import Move
 
 
 class Game:
