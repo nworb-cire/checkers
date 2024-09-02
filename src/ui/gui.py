@@ -2,11 +2,11 @@ import numpy as np
 import pygame
 
 from src.game.player import Player
-from src.game.game import AIGame
+from src.game.game import Game, AIGame
 
 
 class GUI:
-    def __init__(self, screen=None):
+    def __init__(self, game: Game, screen=None, debug: bool = None):
         if screen is None:
             self.WIDTH, self.HEIGHT = 800, 900
             self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -15,8 +15,9 @@ class GUI:
             self.WIDTH, self.HEIGHT = self.WIN.get_size()
         pygame.display.set_caption("Checkers")
 
-        self.game = AIGame()
+        self.game = game
         self.game_over = False
+        self.debug = debug
 
     def draw_piece(self, x, y, player: Player, king: bool):
         color = 255 if player == Player.RED else 0
@@ -80,6 +81,13 @@ class GUI:
                 if (piece := self.game.game_board.board[i, j]) != 0:
                     self.draw_piece(i, j, np.sign(piece), np.abs(piece) == 2)
 
+                # Draw coordinates
+                if self.debug:
+                    font = pygame.font.Font(None, 24)
+                    text = font.render(f"{i}, {j}", True, (0, 150, 0))
+                    text_rect = text.get_rect(center=(i * 100 + 50, j * 100 + 50))
+                    self.WIN.blit(text, text_rect)
+
         # Draw HUD at the bottom
         pygame.draw.rect(self.WIN, (0, 0, 0), (0, 800, 800, 100))
         # Print the current player
@@ -113,7 +121,8 @@ class GUI:
 
 if __name__ == "__main__":
     pygame.init()
-    gui = GUI()
+    game = AIGame()
+    gui = GUI(game=game, debug=True)
 
     run = True
     while run:
