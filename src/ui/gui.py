@@ -12,6 +12,7 @@ class GUI:
         pygame.display.set_caption("Checkers")
 
         self.game = Game()
+        self.game_over = False
 
     def draw_piece(self, x, y, player: Player, king: bool):
         color = 255 if player == Player.RED else 0
@@ -26,6 +27,17 @@ class GUI:
             ])
 
     def draw(self):
+        if not self.game_over:
+            self.draw_board()
+        else:
+            self.WIN.fill((0, 0, 0))
+            font = pygame.font.Font(None, 36)
+            text = font.render(f"Game over! {self.game.get_winner()} wins!", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(400, 400))
+            self.WIN.blit(text, text_rect)
+            pygame.display.update()
+
+    def draw_board(self):
         # Draw the board
         x, y = pygame.mouse.get_pos()
         for i in range(8):
@@ -62,6 +74,7 @@ class GUI:
 
     def handle_click(self, x, y):
         self.game.on_square_click(x // 100, y // 100)
+        self.game_over = self.game.is_game_over()
 
 
 if __name__ == "__main__":
