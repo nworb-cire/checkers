@@ -5,6 +5,7 @@ from src.game.errors import InvalidMoveError, Stalemate, UnableToMoveError
 from src.game.moves import Move
 from src.game.player import Player
 from src.game.scores import Score
+from src.game.settings import MUST_JUMP
 
 
 class BoardState:
@@ -60,7 +61,7 @@ class BoardState:
                 if np.sign(self.board[row, col]) == player:
                     moves.extend(self.get_moves(row, col, player))
                     jump_moves.extend(self.get_jump_moves(row, col, player))
-        if jump_moves:
+        if jump_moves and MUST_JUMP:
             moves = []
         return moves, jump_moves
 
