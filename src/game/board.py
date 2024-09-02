@@ -21,9 +21,6 @@ class Move:
         self.start = start
         self.end = end
 
-    def __str__(self):
-        return f"Move from {self.start} to {self.end}"
-
     def __eq__(self, other):
         return self.start == other.start and self.end == other.end
 
@@ -74,9 +71,6 @@ class GameBoard:
         self.current_player = Player.RED
         self.game_over = False
         self.scores = {Player.RED: 0, Player.BLACK: 0}
-
-    def get_board(self):
-        return self.board
 
     def switch_player(self):
         self.current_player = -self.current_player
