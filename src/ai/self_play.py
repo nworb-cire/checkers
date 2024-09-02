@@ -29,7 +29,9 @@ class CheckersEnv(gym.Env):
             self.game_board.switch_player()
 
         terminated = self.game_board.game_over
-        reward = self.game_board.scores[self.player]
+        reward = (
+            self.game_board.scores[self.player] - self.game_board.scores[-self.player]
+        )
         observation = self.game_board
         info = {}
         return observation, reward, terminated, False, info

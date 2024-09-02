@@ -10,15 +10,16 @@ def train_ppo(
     env,
     agent,
     memory,
-    max_episodes=5_000,
-    max_timesteps=100,
+    num_games=5_000,
+    max_turns=200,
     update_timestep=50,
 ):
     timestep = 0
-    for _ in trange(max_episodes, desc="Games"):
+    for _ in trange(num_games, desc="Games"):
         game_board = env.reset()
-        for t in range(max_timesteps):
+        for t in range(max_turns):
             timestep += 1
+            done = False
             while (
                 game_board.current_player == Player.BLACK and not game_board.game_over
             ):
@@ -26,20 +27,21 @@ def train_ppo(
                 move, logprob = agent.select_action_black(game_board)
                 next_state, reward, done, _, _ = env.step(move.flip())
                 assert next_state.board != board_prev
-            board_prev = BoardState(game_board.board.board.copy())
-            move, logprob = agent.select_action_red(game_board)
-            next_state, reward, done, _, _ = env.step(move)
-            assert next_state.board != board_prev
+            if not game_board.game_over:
+                board_prev = BoardState(game_board.board.board.copy())
+                move, logprob = agent.select_action_red(game_board)
+                next_state, reward, done, _, _ = env.step(move)
+                assert next_state.board != board_prev
 
-            memory.states.append(game_board.board.board.flatten())
-            memory.actions.append(ACTIONS[move])
-            memory.logprobs.append(logprob)
-            if memory.rewards:
-                reward -= memory.rewards[-1]
-            memory.rewards.append(reward)
-            memory.is_terminals.append(done)
+                memory.states.append(game_board.board.board.flatten())
+                memory.actions.append(ACTIONS[move])
+                memory.logprobs.append(logprob)
+                if memory.rewards:
+                    reward -= memory.rewards[-1]
+                memory.rewards.append(reward)
+                memory.is_terminals.append(done)
 
-            game_board = next_state
+                game_board = next_state
 
             if timestep % update_timestep == 0:
                 agent.update(memory)
