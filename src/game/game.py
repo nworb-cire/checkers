@@ -16,7 +16,9 @@ class Game:
     def is_game_over(self):
         red, red_jump = self.game_board.get_available_moves(Player.RED)
         black, black_jump = self.game_board.get_available_moves(Player.BLACK)
-        return (len(red) == 0 and len(red_jump) == 0) or (len(black) == 0 and len(black_jump) == 0)
+        return (len(red) == 0 and len(red_jump) == 0) or (
+            len(black) == 0 and len(black_jump) == 0
+        )
 
     def get_winner(self):
         if self.is_game_over():
@@ -27,10 +29,15 @@ class Game:
         return "red" if self.current_player() == Player.RED else "black"
 
     def count_pieces(self, player: Player) -> tuple[int, int]:
-        return np.sum(self.game_board.board.board == player), np.sum(self.game_board.board.board == 2 * player)
+        return np.sum(self.game_board.board.board == player), np.sum(
+            self.game_board.board.board == 2 * player
+        )
 
     def on_square_click(self, x, y):
-        if self.selected_square is None and np.sign(self.game_board.board[x, y]) == self.current_player():
+        if (
+            self.selected_square is None
+            and np.sign(self.game_board.board[x, y]) == self.current_player()
+        ):
             self.selected_square = (x, y)
         elif self.selected_square is not None:
             with contextlib.suppress(ValueError):
