@@ -65,7 +65,7 @@ class AIGame(Game):
         super().__init__()
         self.human_player = Player.BLACK
         if ai is None:
-            ai = CheckersAI.init(Player.RED)
+            ai = CheckersAI.init(Player.RED, "models/ppo.pt")
         self.ai = ai
 
     def ai_turn(self):
