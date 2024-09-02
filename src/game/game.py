@@ -70,7 +70,7 @@ class AIGame(Game):
         self.ai = ai
 
     def ai_turn(self):
-        time.sleep(0.5)
+        time.sleep(0.25 + np.random.rand() * 0.5)
         move, _ = self.ai.select_action(self.game_board)
         super().take_turn(move)
 

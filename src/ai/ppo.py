@@ -37,7 +37,9 @@ class PPOAgent:
 
     def select_action_red(self, game_board: GameBoard):
         state = torch.tensor(game_board.board.board, dtype=torch.float32).flatten()
-        mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
+        mask = torch.tensor(
+            game_board.board.get_moves_mask(Player.RED), dtype=torch.bool
+        )
         action_probs, _ = self.policy_red(state, mask)
         dist = Categorical(action_probs)
         action = dist.sample()
@@ -50,7 +52,9 @@ class PPOAgent:
         state = torch.tensor(
             game_board.board.flip().board, dtype=torch.float32
         ).flatten()
-        mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
+        mask = torch.tensor(
+            game_board.board.get_moves_mask(Player.RED), dtype=torch.bool
+        )
         action_probs, _ = self.policy_black(state, mask)
         dist = Categorical(action_probs)
         action = dist.sample()

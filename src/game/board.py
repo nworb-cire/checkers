@@ -155,6 +155,11 @@ class BoardState:
                 moves.append(Move((row, col), (row - 2 * player, col + 2)))
         return moves
 
+    def get_moves_mask(self, player: Player):
+        moves, jump_moves = self.get_available_moves(player)
+        mask = [move in moves + jump_moves for move in MOVES.values()]
+        return mask
+
     def is_able_to_move(self, player: Player):
         moves, jump_moves = self.get_available_moves(player)
         return len(moves) + len(jump_moves) > 0
@@ -198,13 +203,6 @@ class GameBoard:
 
     def switch_player(self):
         self.current_player = -self.current_player
-
-    def get_moves_mask(self, player: Player | None = None):
-        if player is None:
-            player = self.current_player
-        moves, jump_moves = self.board.get_available_moves(player)
-        mask = [move in moves + jump_moves for move in MOVES.values()]
-        return mask
 
     def make_move(self, move: Move) -> bool:
         """

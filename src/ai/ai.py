@@ -26,7 +26,7 @@ class CheckersAI:
             # If the AI is playing as player 2 (black), the board needs to be flipped.
             board = board.flip()
         state = torch.tensor(board.board, dtype=torch.float32).flatten()
-        mask = torch.tensor(game_board.get_moves_mask(), dtype=torch.bool)
+        mask = torch.tensor(board.get_moves_mask(Player.RED), dtype=torch.bool)
         if not mask.any():
             raise UnableToMoveError(winner=-self.player)
         action_probs, _ = self.policy(state, mask)
