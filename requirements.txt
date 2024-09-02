@@ -1,0 +1,5 @@
+black
+numpy~=2.1.0
+pygame~=2.6.0
+pygbag
+pytest~=8.3.2
