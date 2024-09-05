@@ -1,4 +1,4 @@
-name: Build Space Invaders with Pygbag
+name: Deploy to GitHub Pages with pygbag
 on:
   push:
     branches:
@@ -25,4 +25,4 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@4.1.7
       with:
         branch: gh-pages
-        folder: checkers/build/web
+        folder: build/web
