@@ -11,8 +11,9 @@ from src.game.moves import Move
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, debug: bool = False):
         self.game_board = GameBoard()
+        self.debug = debug
         self.from_square = None
         self.to_square = None
         self.winner = None
@@ -36,9 +37,9 @@ class Game:
 
     def take_turn(self, move: Move):
         try:
-            switch_turns = self.game_board.make_move(move)
-            if switch_turns:
-                self.game_board.switch_player()
+            self.game_board.make_move(move)
+            if self.debug:
+                print(repr(self.game_board.board.board))
         except GameOver as e:
             self.winner = e.winner
             raise e
@@ -62,8 +63,8 @@ class Game:
 
 
 class AIGame(Game):
-    def __init__(self, ai: CheckersAI | None = None):
-        super().__init__()
+    def __init__(self, ai: CheckersAI | None = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.human_player = Player.RED
         if ai is None:
             ai = CheckersAI.init(-self.human_player, "models/ppo.pt")
