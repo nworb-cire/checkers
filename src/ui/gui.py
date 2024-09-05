@@ -137,5 +137,6 @@ if __name__ == "__main__":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
                 gui.handle_click(x, y)
-        gui.tick()
+        if not gui.game_over:
+            gui.tick()
     pygame.quit()
