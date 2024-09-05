@@ -200,11 +200,12 @@ class GameBoard:
         self.game_over = False
         self.scores = {Player.RED: 0, Player.BLACK: 0}
         self.turn_number = 0
+        self.restrict_moves = None
 
     def switch_player(self):
         self.current_player = -self.current_player
 
-    def make_move(self, move: Move) -> bool:
+    def make_move(self, move: Move):
         """
         Make a move on the board. Returns True if the turn is complete and should switch players, False if the current
         player has another move available (i.e. a jump move) or has won the game.
@@ -219,20 +220,17 @@ class GameBoard:
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = 0
         if move in jump_moves:
-            jumped_space = (move.start[0] + move.end[0]) // 2, (
-                move.start[1] + move.end[1]
-            ) // 2
+            jumped_space = sum(move.start) // 2, sum(move.end) // 2
             jumped_king = np.abs(self.board[jumped_space]) == 2
             if jumped_king:
                 self.scores[self.current_player] += Score.KING_CAPTURE
             else:
                 self.scores[self.current_player] += Score.REGULAR_CAPTURE
             self.board[jumped_space] = 0
-            jump_moves = self.board.get_jump_moves(
-                move.end[0], move.end[1], self.current_player
-            )
+            jump_moves = self.board.get_jump_moves(*move.end, self.current_player)
             if jump_moves:
-                return False
+                self.restrict_moves = move.end
+                return
         # king me
         if (
             move.end[0] == self.board.max_row_for_player(self.current_player)
@@ -249,4 +247,5 @@ class GameBoard:
             self.scores[self.current_player] += Score.WIN
             raise UnableToMoveError(winner=self.current_player)
 
-        return True
+        self.restrict_moves = None
+        self.switch_player()
