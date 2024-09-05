@@ -94,7 +94,7 @@ class GUI:
         # Print the current player
         font = pygame.font.Font(None, 36)
         text = font.render(
-            f"Current player: {self.game.current_player_str()}", True, (255, 255, 255)
+            f"Current player: {self.game.current_player}", True, (255, 255, 255)
         )
         text_rect = text.get_rect(center=(400, 825))
         self.WIN.blit(text, text_rect)

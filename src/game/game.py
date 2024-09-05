@@ -18,17 +18,17 @@ class Game:
         self.to_square = None
         self.winner = None
 
+    @property
     def current_player(self):
         return self.game_board.current_player
 
     def is_game_over(self):
         return self.game_board.game_over
 
-    def current_player_str(self):
-        return "red" if self.current_player() == Player.RED else "black"
-
     def score_str(self):
-        return f"Red: {self.game_board.scores[Player.RED]} Black: {self.game_board.scores[Player.BLACK]}"
+        return ", ".join(
+            f"{player}: {score}" for player, score in self.game_board.scores.items()
+        )
 
     def count_pieces(self, player: Player) -> tuple[int, int]:
         return np.sum(self.game_board.board.board == player), np.sum(
@@ -76,7 +76,7 @@ class AIGame(Game):
         super().take_turn(move)
 
     def tick(self):
-        if self.current_player() == self.human_player:
+        if self.current_player == self.human_player:
             self.human_turn()
         else:
             self.ai_turn()
