@@ -1,6 +1,8 @@
 import numpy as np
+import pytest
 
 from src.game.board import GameBoard, BoardState
+from src.game.errors import InvalidMoveError
 from src.game.moves import Move
 from src.game.player import Player
 
@@ -78,4 +80,31 @@ def test_turn_with_multiple_jumps(game_board):
     )
     game_board.current_player = Player.BLACK
     game_board.make_move(Move((4, 2), (2, 0)))
+    assert game_board.current_player == Player.BLACK
+
+
+def test_double_jump():
+    game_board = GameBoard(
+        BoardState(
+            np.array(
+                [
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, -1, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, -1, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, -1],
+                ]
+            )
+        )
+    )
+    game_board.current_player = Player.RED
+    game_board.make_move(Move((0, 0), (2, 2)))
+    assert game_board.current_player == Player.RED
+    assert game_board.restrict_moves == (2, 2)
+    with pytest.raises(InvalidMoveError):
+        game_board.make_move(Move((2, 0), (4, 2)))
+    game_board.make_move(Move((2, 2), (4, 0)))
     assert game_board.current_player == Player.BLACK

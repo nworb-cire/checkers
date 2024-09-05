@@ -54,7 +54,7 @@ class Game:
             move = Move(self.from_square, self.to_square)
             with contextlib.suppress(InvalidMoveError):
                 self.take_turn(move)
-            self.from_square = None
+            self.from_square = self.game_board.restrict_moves
             self.to_square = None
 
     def tick(self):

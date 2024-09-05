@@ -213,14 +213,18 @@ class GameBoard:
         :return: True if the turn is complete, False otherwise
         """
         moves, jump_moves = self.board.get_available_moves(self.current_player)
-        if move not in moves and move not in jump_moves:
+        if (move not in moves and move not in jump_moves) or (
+            self.restrict_moves and move.start != self.restrict_moves
+        ):
             raise InvalidMoveError(move)
 
         self.turn_number += 1
         self.board[move.end] = self.board[move.start]
         self.board[move.start] = 0
         if move in jump_moves:
-            jumped_space = sum(move.start) // 2, sum(move.end) // 2
+            jumped_space = (move.start[0] + move.end[0]) // 2, (
+                move.start[1] + move.end[1]
+            ) // 2
             jumped_king = np.abs(self.board[jumped_space]) == 2
             if jumped_king:
                 self.scores[self.current_player] += Score.KING_CAPTURE
