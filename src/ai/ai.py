@@ -41,5 +41,5 @@ class CheckersAI:
     def init(cls, player: Player, path: str | None = None):
         policy_model = PolicyNetwork()
         if path is not None:
-            policy_model.load_state_dict(torch.load(path))
+            policy_model.load_state_dict(torch.load(path, weights_only=True))
         return cls(player, policy_model)
