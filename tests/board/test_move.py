@@ -48,7 +48,7 @@ def test_moves_at_extremities(
     if king:
         arr[row, col] *= 2
     board = GameBoard(BoardState(arr))
-    moves = board.board.get_moves(row, col, player)
+    moves = board.board.get_moves(row, col)
     assert moves == expected
 
 

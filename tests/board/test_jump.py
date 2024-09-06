@@ -12,9 +12,9 @@ def test_jump():
     arr[0, 0] = 1
     arr[1, 1] = -1
     board = GameBoard(BoardState(arr))
-    moves = board.board.get_jump_moves(0, 0, Player.RED)
+    moves = board.board.get_jump_moves(0, 0)
     assert moves == [Move((0, 0), (2, 2))]
-    moves = board.board.get_jump_moves(1, 1, Player.BLACK)
+    moves = board.board.get_jump_moves(1, 1)
     assert moves == []
 
 
@@ -24,9 +24,9 @@ def test_jump_blocked():
     arr[1, 1] = -1
     arr[2, 2] = 1
     board = GameBoard(BoardState(arr))
-    moves = board.board.get_jump_moves(0, 0, Player.RED)
+    moves = board.board.get_jump_moves(0, 0)
     assert moves == []
-    moves = board.board.get_jump_moves(1, 1, Player.BLACK)
+    moves = board.board.get_jump_moves(1, 1)
     assert moves == []
 
 

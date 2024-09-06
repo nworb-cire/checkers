@@ -100,8 +100,8 @@ class BoardState:
         for row in range(8):
             for col in range(8):
                 if np.sign(self.board[row, col]) == player:
-                    moves.extend(self.get_moves(row, col, player))
-                    jump_moves.extend(self.get_jump_moves(row, col, player))
+                    moves.extend(self.get_moves(row, col))
+                    jump_moves.extend(self.get_jump_moves(row, col))
         if jump_moves and MUST_JUMP:
             moves = []
         return moves, jump_moves
@@ -114,17 +114,17 @@ class BoardState:
     def second_last_row_for_player(player: Player):
         return 6 if player == Player.RED else 1
 
-    def get_moves(self, row: int, col: int, player: Player):
+    def get_moves(self, row: int, col: int):
         """
         Get all available standard (non-jump) moves for the piece at the given row and column.
         :param row: The row of the piece.
         :param col: The column of the piece.
-        :param player: The player that owns the piece.
         :return: A list of Move objects representing the available moves.
         """
         moves = []
         if self.board[row, col] == 0:
             return moves
+        player = Player(np.sign(self.board[row, col]))
         if (
             col > 0
             and row != self.max_row_for_player(player)
@@ -152,17 +152,17 @@ class BoardState:
                 moves.append(Move((row, col), (row - player, col + 1)))
         return moves
 
-    def get_jump_moves(self, row: int, col: int, player: Player):
+    def get_jump_moves(self, row: int, col: int):
         """
         Get all available jump moves for the piece at the given row and column.
         :param row: The row of the piece.
         :param col: The column of the piece.
-        :param player: The player that owns the piece.
         :return: A list of Move objects representing the available jump moves.
         """
         moves = []
         if self.board[row, col] == 0:
             return moves
+        player = Player(np.sign(self.board[row, col]))
         if (
             col > 1
             and row
@@ -308,7 +308,7 @@ class GameBoard:
             else:
                 self.scores[self.current_player] += Score.REGULAR_CAPTURE
             self.board[jumped_space] = 0
-            jump_moves = self.board.get_jump_moves(*move.end, self.current_player)
+            jump_moves = self.board.get_jump_moves(*move.end)
             if jump_moves:
                 self.restrict_moves = move.end
                 return
