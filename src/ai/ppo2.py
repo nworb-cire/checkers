@@ -3,7 +3,7 @@ import torch
 from torch import nn as nn
 from torch.distributions import Categorical
 
-from src.ai.actions import MOVES
+from src.ai.actions import MOVES, ACTIONS
 from src.game.board import BoardState
 from src.game.board import GameBoard
 from src.game.errors import GameOver
@@ -45,23 +45,32 @@ class PolicyNetwork(nn.Module):
         self.value_head = nn.Linear(hidden_dim, 1)
 
     def forward(
-        self, state: BoardState, mask=None
+        self,
+        state: BoardState,
+        action: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        mask = state.get_moves_mask(Player.RED)  # AI always plays as RED
         x = state.to_tensor()
         x = self.resnet(x)
         value = self.value_head(x)
 
         logits = self.action_head(x)
-        if mask is not None:
-            logits[~mask] = -float("inf")
+        logits[~mask] = -float("inf")
         dist = Categorical(logits=logits)
-        action = dist.sample()
+        if action is None:
+            action = dist.sample()
         log_prob = dist.log_prob(action)
         entropy = dist.entropy()
         return action, log_prob, entropy, value
 
 
 class Memory:
+    actions: list[Move]
+    states: list[BoardState]
+    logprobs: list[torch.Tensor]
+    rewards: list[float]
+    is_terminals: list[bool]
+
     def __init__(self):
         self.actions = []
         self.states = []
@@ -147,6 +156,27 @@ class CheckersPPOAgent(pl.LightningModule):
         self.log("ELO_red", self.elo_red)
         self.log("ELO_black", self.elo_black)
 
+    def loss(self, states, actions, logprobs, rewards):
+        """Single iteration of PPO update."""
+        # Evaluating old actions and values:
+        action, log_prob, entropy, state_value = self.policy_network_red(
+            states, actions
+        )
+
+        # Finding the ratio (pi_theta / pi_theta__old):
+        ratios = torch.exp(log_prob - logprobs)
+
+        # Finding Surrogate Loss:
+        advantages = rewards - state_value.detach()
+        surr1 = ratios * advantages
+        surr2 = torch.clamp(ratios, 1 - self.eps_clip, 1 + self.eps_clip) * advantages
+        loss = (
+            -torch.min(surr1, surr2)
+            + 0.5 * nn.functional.mse_loss(state_value, rewards)
+            - 0.01 * entropy
+        )
+        return loss
+
     def on_train_epoch_start(self):
         # play several games
         for _ in range(self.games_per_batch):
@@ -160,7 +190,23 @@ class CheckersPPOAgent(pl.LightningModule):
         self.policy_network_black.load_state_dict(self.policy_network_red.state_dict())
 
     def training_step(self, *args):
-        loss = self.loss()
+        # Monte Carlo estimate of rewards:
+        rewards = []
+        discounted_reward = 0
+        for reward, is_terminal in zip(
+            reversed(self.memory.rewards), reversed(self.memory.is_terminals)
+        ):
+            if is_terminal:
+                discounted_reward = 0
+            discounted_reward = reward + self.gamma * discounted_reward
+            rewards.insert(0, discounted_reward)
+
+        loss = self.loss(
+            states=torch.stack([state.to_tensor() for state in self.memory.states]),
+            actions=torch.tensor([ACTIONS[action] for action in self.memory.actions]),
+            logprobs=torch.stack(self.memory.logprobs),
+            rewards=torch.tensor(rewards, dtype=torch.float32),
+        )
         self.log("loss", loss)
         return loss
 
@@ -170,10 +216,13 @@ class CheckersPPOAgent(pl.LightningModule):
         player: Player,
     ) -> tuple[Move, torch.Tensor]:
         if player == Player.BLACK:
+            network = self.policy_network_black
             state = state.flip()
+        else:
+            network = self.policy_network_red
         state_tensor = state.to_tensor()
         mask = state.get_moves_mask(Player.RED)  # AI always plays as RED
-        action_probs, _ = self.agent(state_tensor, mask)
+        action, log_prob, _, _ = network(state_tensor)
         dist = torch.distributions.Categorical(action_probs)
         action = dist.sample()
         return MOVES[action.item()], dist.log_prob(action)
