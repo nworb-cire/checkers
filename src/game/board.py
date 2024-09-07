@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 from src.ai.actions import MOVES
 from src.game.errors import InvalidMoveError, Stalemate, UnableToMoveError
@@ -266,6 +267,13 @@ class BoardState:
             ]
         )
         return board
+
+    def to_tensor(self):
+        """
+        Convert the board state to a tensor for use with PyTorch models.
+        :return: A tensor of shape (1, 64) representing the board state.
+        """
+        return torch.tensor(self.board.flatten(), dtype=torch.float32).unsqueeze(0)
 
 
 class GameBoard:
