@@ -305,8 +305,10 @@ class GameBoard:
             jumped_king = np.abs(self.board[jumped_space]) == 2
             if jumped_king:
                 self.scores[self.current_player] += Score.KING_CAPTURE
+                self.scores[-self.current_player] -= Score.KING_CAPTURE
             else:
                 self.scores[self.current_player] += Score.REGULAR_CAPTURE
+                self.scores[-self.current_player] -= Score.REGULAR_CAPTURE
             self.board[jumped_space] = 0
             jump_moves = self.board.get_jump_moves(*move.end)
             if jump_moves:
@@ -326,6 +328,7 @@ class GameBoard:
 
         if not self.board.is_able_to_move(-self.current_player):
             self.scores[self.current_player] += Score.WIN
+            self.scores[-self.current_player] -= Score.WIN
             raise UnableToMoveError(winner=self.current_player)
 
         self.restrict_moves = None
