@@ -107,7 +107,7 @@ class CheckersPPOAgent(pl.LightningModule):
 
         self.policy_network_red = PolicyNetwork()
         self.policy_network_black = PolicyNetwork()
-        self.value_network_black.load_state_dict(self.value_network_red.state_dict())
+        self.policy_network_black.load_state_dict(self.policy_network_red.state_dict())
 
         self.elo_red = self.elo_black = 1200
 
