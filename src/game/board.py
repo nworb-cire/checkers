@@ -27,6 +27,7 @@ class BoardState:
             board = self.setup_board()
         assert board.shape == (8, 8)
         self.board = board
+        self.restrict_moves = None
 
     def __getitem__(self, key):
         return self.board[key]
@@ -287,7 +288,10 @@ class GameBoard:
         self.game_over = False
         self.scores = {Player.RED: 0, Player.BLACK: 0}
         self.turn_number = 0
-        self.restrict_moves = None
+
+    @property
+    def restrict_moves(self):
+        return self.board.restrict_moves
 
     def switch_player(self):
         self.current_player = -self.current_player
@@ -322,7 +326,7 @@ class GameBoard:
             self.board[jumped_space] = 0
             jump_moves = self.board.get_jump_moves(*move.end)
             if jump_moves:
-                self.restrict_moves = move.end
+                self.board.restrict_moves = move.end
                 return
         # king me
         if (
@@ -341,5 +345,5 @@ class GameBoard:
             self.scores[-self.current_player] -= Score.WIN
             raise UnableToMoveError(winner=self.current_player)
 
-        self.restrict_moves = None
+        self.board.restrict_moves = None
         self.switch_player()
