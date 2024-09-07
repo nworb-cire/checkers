@@ -218,7 +218,9 @@ class BoardState:
         :return: A list of booleans representing the available moves. This has the same shape as the MOVES dictionary.
         """
         moves, jump_moves = self.get_available_moves(player)
-        mask = [move in moves + jump_moves for move in MOVES.values()]
+        mask = torch.tensor(
+            [move in moves + jump_moves for move in MOVES.values()], dtype=torch.bool
+        ).unsqueeze(0)
         return mask
 
     def is_able_to_move(self, player: Player) -> bool:
