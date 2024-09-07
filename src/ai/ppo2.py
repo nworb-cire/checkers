@@ -234,3 +234,9 @@ class CheckersPPOAgent(pl.LightningModule):
         mask = state.get_moves_mask(Player.RED)  # AI always plays as RED
         action, log_prob, _, _ = network(state_tensor)
         return action, log_prob
+
+
+if __name__ == "__main__":
+    trainer = pl.Trainer(max_epochs=100)
+    agent = CheckersPPOAgent()
+    trainer.fit(agent)
