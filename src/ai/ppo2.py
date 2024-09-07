@@ -235,6 +235,10 @@ class CheckersPPOAgent(pl.LightningModule):
         action, log_prob, _, _ = network(state_tensor)
         return action, log_prob
 
+    def train_dataloader(self):
+        """Dummy dataloader"""
+        return [None] * self.games_per_batch
+
 
 if __name__ == "__main__":
     trainer = pl.Trainer(max_epochs=100)
