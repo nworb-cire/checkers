@@ -147,15 +147,19 @@ class CheckersPPOAgent(pl.LightningModule):
         self.log("ELO_red", self.elo_red)
         self.log("ELO_black", self.elo_black)
 
-    def training_step(self, *args):
+    def on_train_epoch_start(self):
         # play several games
         for _ in range(self.games_per_batch):
             try:
                 self.play_game()
             except GameOver as e:
                 self.elo_update(e.winner)
-        # collect data
-        # train
+
+    def on_train_epoch_end(self):
+        self.memory.clear_memory()
+        self.policy_network_black.load_state_dict(self.policy_network_red.state_dict())
+
+    def training_step(self, *args):
         loss = self.loss()
         self.log("loss", loss)
         return loss
