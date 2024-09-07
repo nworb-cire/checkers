@@ -125,15 +125,25 @@ class CheckersPPOAgent(pl.LightningModule):
             action, log_prob = self.get_action(
                 self.game_board.board, self.game_board.current_player
             )
-            self.game_board.make_move(action)
+            move = MOVES[action.item()]
+            try:
+                self.game_board.make_move(move)
+            except GameOver:
+                self.memory.is_terminals[-1] = True
+                # TODO: handle score?
+                raise
+
             reward_next = self.game_board.scores[Player.RED]
             reward = reward_next - reward_prev
             done = self.game_board.game_over
-            self.memory.states.append(self.game_board.board.to_tensor())
-            self.memory.actions.append(action)
-            self.memory.logprobs.append(log_prob)
-            self.memory.rewards.append(reward)
-            self.memory.is_terminals.append(done)
+
+            # Write to history only on red turns
+            if self.game_board.current_player == Player.RED:
+                self.memory.states.append(self.game_board.board.to_tensor())
+                self.memory.actions.append(move)
+                self.memory.logprobs.append(log_prob)
+                self.memory.rewards.append(reward)
+                self.memory.is_terminals.append(done)
             i += 1
 
     def elo_update(self, winner: Player, k: int = 32):
@@ -214,7 +224,7 @@ class CheckersPPOAgent(pl.LightningModule):
         self,
         state: BoardState,
         player: Player,
-    ) -> tuple[Move, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         if player == Player.BLACK:
             network = self.policy_network_black
             state = state.flip()
@@ -223,6 +233,4 @@ class CheckersPPOAgent(pl.LightningModule):
         state_tensor = state.to_tensor()
         mask = state.get_moves_mask(Player.RED)  # AI always plays as RED
         action, log_prob, _, _ = network(state_tensor)
-        dist = torch.distributions.Categorical(action_probs)
-        action = dist.sample()
-        return MOVES[action.item()], dist.log_prob(action)
+        return action, log_prob
