@@ -24,7 +24,8 @@ class ResidualBlock(nn.Module):
         return x_in + x
 
 
-class PolicyNetwork(nn.Module):
+class PolicyNetwork(pl.LightningModule):
+    OUTPUT_TYPE = tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
     """
     Policy network for PPO algorithm.
     """
@@ -45,12 +46,10 @@ class PolicyNetwork(nn.Module):
         self.value_head = nn.Linear(hidden_dim, 1)
 
     def forward(
-        self,
-        state: BoardState,
-        action: torch.Tensor | None = None,
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        self, state: BoardState, action: torch.Tensor | None = None
+    ) -> OUTPUT_TYPE:
         mask = state.get_moves_mask(Player.RED)  # AI always plays as RED
-        x = state.to_tensor()
+        x = state.to_tensor().to(device=self.device)
         x = self.resnet(x)
         value = self.value_head(x)
 
@@ -122,10 +121,10 @@ class CheckersPPOAgent(pl.LightningModule):
         i = 0
         while not self.game_board.game_over and i < self.max_game_length:
             reward_prev = self.game_board.scores[Player.RED]
-            action, log_prob = self.get_action(
-                self.game_board.board, self.game_board.current_player
-            )
-            move = MOVES[action.item()]
+            if self.game_board.current_player == Player.RED:
+                move, log_prob = self.get_red_move()
+            else:
+                move, log_prob = self.get_black_move()
             try:
                 self.game_board.make_move(move)
             except GameOver:
@@ -139,7 +138,7 @@ class CheckersPPOAgent(pl.LightningModule):
 
             # Write to history only on red turns
             if self.game_board.current_player == Player.RED:
-                self.memory.states.append(self.game_board.board.to_tensor())
+                self.memory.states.append(self.game_board.board)
                 self.memory.actions.append(move)
                 self.memory.logprobs.append(log_prob)
                 self.memory.rewards.append(reward)
@@ -220,27 +219,23 @@ class CheckersPPOAgent(pl.LightningModule):
         self.log("loss", loss)
         return loss
 
-    def get_action(
-        self,
-        state: BoardState,
-        player: Player,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        if player == Player.BLACK:
-            network = self.policy_network_black
-            state = state.flip()
-        else:
-            network = self.policy_network_red
-        state_tensor = state.to_tensor()
-        mask = state.get_moves_mask(Player.RED)  # AI always plays as RED
-        action, log_prob, _, _ = network(state_tensor)
-        return action, log_prob
+    def get_red_move(self):
+        action, log_prob, _, _ = self.policy_network_red(self.game_board.board)
+        move = MOVES[action.item()]
+        return move, log_prob
+
+    def get_black_move(self):
+        action, log_prob, _, _ = self.policy_network_black(self.game_board.board.flip())
+        move = MOVES[action.item()].flip()
+        return move, log_prob
 
     def train_dataloader(self):
         """Dummy dataloader"""
-        return [None] * self.games_per_batch
+        return [0] * self.games_per_batch
 
 
 if __name__ == "__main__":
-    trainer = pl.Trainer(max_epochs=100)
+    pl.seed_everything(0)
+    trainer = pl.Trainer(max_epochs=100, fast_dev_run=True)
     agent = CheckersPPOAgent()
     trainer.fit(agent)
