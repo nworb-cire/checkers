@@ -3,9 +3,11 @@ import torch
 from torch import nn as nn
 from torch.distributions import Categorical
 
+from src.ai.actions import MOVES
 from src.game.board import BoardState
 from src.game.board import GameBoard
 from src.game.errors import GameOver
+from src.game.moves import Move
 from src.game.player import Player
 
 
@@ -114,7 +116,7 @@ class CheckersPPOAgent(pl.LightningModule):
             action, log_prob = self.get_action(
                 self.game_board.board, self.game_board.current_player
             )
-            self.game_board.move(action)
+            self.game_board.make_move(action)
             reward_next = self.game_board.scores[Player.RED]
             reward = reward_next - reward_prev
             done = self.game_board.game_over
@@ -125,8 +127,25 @@ class CheckersPPOAgent(pl.LightningModule):
             self.memory.is_terminals.append(done)
             i += 1
 
-    def elo_update(self, winner: Player):
-        raise NotImplementedError
+    def elo_update(self, winner: Player, k: int = 32):
+        """
+        Update the ELO scores for the agents after a game.
+        :param winner: The Player who won the game, or None if it was a draw.
+        :param k: The K-factor for the ELO update.
+        """
+        if winner is None:
+            return
+        P_red = 1 / (1 + 10 ** ((self.elo_black - self.elo_red) / 400))
+        P_black = 1 / (1 + 10 ** ((self.elo_red - self.elo_black) / 400))
+
+        if winner == Player.RED:
+            self.elo_red += k * (1 - P_red)
+            self.elo_black -= k * P_black
+        else:
+            self.elo_red -= k * P_red
+            self.elo_black += k * (1 - P_black)
+        self.log("ELO_red", self.elo_red)
+        self.log("ELO_black", self.elo_black)
 
     def training_step(self, *args):
         # play several games
@@ -141,7 +160,11 @@ class CheckersPPOAgent(pl.LightningModule):
         self.log("loss", loss)
         return loss
 
-    def get_action(self, state: BoardState, player: Player):
+    def get_action(
+        self,
+        state: BoardState,
+        player: Player,
+    ) -> tuple[Move, torch.Tensor]:
         if player == Player.BLACK:
             state = state.flip()
         state_tensor = state.to_tensor()
@@ -149,4 +172,4 @@ class CheckersPPOAgent(pl.LightningModule):
         action_probs, _ = self.agent(state_tensor, mask)
         dist = torch.distributions.Categorical(action_probs)
         action = dist.sample()
-        return action, dist.log_prob(action)
+        return MOVES[action.item()], dist.log_prob(action)
